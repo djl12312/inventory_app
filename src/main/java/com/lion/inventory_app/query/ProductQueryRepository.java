@@ -3,6 +3,7 @@ package com.lion.inventory_app.query;
 
 import com.lion.inventory_app.model.Product;
 import com.lion.inventory_app.model.QProduct;
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -16,5 +17,18 @@ public class ProductQueryRepository {
 
     public List<Product> search(ProductSearchCondition condition) {
         QProduct product = QProduct.product;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        if (condition.getName() != null && !condition.getName().isBlank()) {
+            builder.and(product.name.containsIgnoreCase(condition.getName()));
+        }
+        if (condition.getMinPrice() != null) {
+            builder.and(product.price.goe(condition.getMinPrice()));
+        }
+        if (condition.getMaxPrice() != null) {
+            builder.and(product.price.loe(condition.getMaxPrice()));
+        }
+
+        return queryFactory.selectFrom(product).where(builder).orderBy(product.name.asc()).fetch();
     }
 }
